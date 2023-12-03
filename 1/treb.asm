@@ -1,3 +1,4 @@
+; vim:set filetype=nasm
 
 %define SYSCALL_READ   0
 %define SYSCALL_WRITE  1
@@ -20,16 +21,26 @@ section .bss    ; store variables here
 
 section .text
         global _start
+        extern convertDigits
 
 _start:
-        xor r12, r12    ; clear flags
-        ;call _getline  ; to be used when writing from keyboard
+        xor r12, r12    ; reset status
+        mov byte [first], 0
+        mov byte [last], 0
+
+        ;call _getline  ; more efficient but only works if input is keyboard
         call _getline_file
         cmp rax, 0      ; EOF?
         je printSum
 
+        mov rbx, rax ; rax is a scratch reg. `convertDigits` can use it
+        ; comment the following if compiling exercise 1.1
+        lea rdi, lineIn
+        mov rsi, rax
+        call convertDigits
+
         ; skim through the input line from the end to the start
-        mov r13, rax
+        mov r13, rbx
 nextChar:
         sub r13, 1      ; use as index. Didn't use DEC as doesn't set sign flag
         js useFirstLast ; when r13 is negative entire line has been read
